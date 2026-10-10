@@ -1,0 +1,8 @@
+const DEFAULT={duration:9,ticker:'HOPFADDICT AMATA • เปิดทุกวัน 11:00–24:00 น. • STOP THINKING START DRINKING',news:'ยินดีต้อนรับสู่ HOPFADDICT AMATA',music:'ดนตรีสด 19:40–21:10 น.',beers:'Paulaner Oktoberfest • Craft Beer กว่า 100 รายการ',pointsUrl:'',slides:Array.from({length:10},(_,i)=>({id:'initial'+i,src:'assets/promo'+i+'.jpg',title:i===0?'HOPFADDICT AMATA':'โปรโมชั่น '+i,active:true}))};
+const KEY='hopf_tv_v3';function load(){try{return {...DEFAULT,...JSON.parse(localStorage.getItem(KEY)||'{}')}}catch{return structuredClone(DEFAULT)}}
+function save(data){localStorage.setItem(KEY,JSON.stringify(data));try{new BroadcastChannel('hopf_tv').postMessage('update')}catch{}}
+function openDB(){return new Promise((resolve,reject)=>{let r=indexedDB.open('hopf_tv_images',1);r.onupgradeneeded=()=>r.result.createObjectStore('images');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)})}
+async function putImage(id,file){const db=await openDB();return new Promise((resolve,reject)=>{let tx=db.transaction('images','readwrite');tx.objectStore('images').put(file,id);tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error)})}
+async function getImage(id){const db=await openDB();return new Promise((resolve,reject)=>{let tx=db.transaction('images','readonly');let r=tx.objectStore('images').get(id);r.onsuccess=()=>resolve(r.result||null);r.onerror=()=>reject(r.error)})}
+async function deleteImage(id){const db=await openDB();return new Promise((resolve)=>{let tx=db.transaction('images','readwrite');tx.objectStore('images').delete(id);tx.oncomplete=resolve;tx.onerror=resolve})}
+async function urlFor(s){if(s.src)return s.src;const b=await getImage(s.id);return b?URL.createObjectURL(b):''}
